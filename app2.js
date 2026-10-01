@@ -1167,6 +1167,69 @@ function exportarExcelRendimiento() {
     const fin = viajes.filter(v => v.estado === 'FINALIZADO');
     if (fin.length === 0) { alert("No hay datos para exportar."); return; }
 
+    // ==========================================
+    // 1. CÁLCULO DE MÉTRICAS PARA PLACA ANALÍTICA
+    // ==========================================
+    let totalViajes = fin.length;
+    let totalBruto = 0;
+    let totalTara = 0;
+    let totalNeto = 0;
+    
+    let kgPropios = 0;   // Salentein / Propios
+    let kgTerceros = 0;  // Terceros
+
+    let resumenLagar = {};
+
+    fin.forEach(v => {
+        const bruto = v.bruto || 0;
+        const tara = v.tara || 0;
+        const neto = v.neto || 0;
+
+        totalBruto += bruto;
+        totalTara += tara;
+        totalNeto += neto;
+
+        // Distribuir Propios vs Terceros (Ajusta 'SALENTEIN' según el valor real de tu sistema)
+        const prodUpper = (v.productor || '').toUpperCase();
+        if (prodUpper.includes('SALENTEIN') || prodUpper.includes('PROPIO')) {
+            kgPropios += neto;
+        } else {
+            kgTerceros += neto;
+        }
+
+        // Totalizar por Lagar de descarga
+        const lagar = v.lagar || 'Sin Asignar';
+        if (!resumenLagar[lagar]) resumenLagar[lagar] = { neto: 0, viajes: 0 };
+        resumenLagar[lagar].neto += neto;
+        resumenLagar[lagar].viajes += 1;
+    });
+
+    // Armar matriz de datos para la hoja Placa Analítica
+    const datosAnalitica = [
+        ["MÉTRICA ANALÍTICA DE RECEPCIÓN", "VALOR"],
+        ["Total Viajes Finalizados", totalViajes],
+        ["Bruto Total (Kg)", totalBruto],
+        ["Tara Total (Kg)", totalTara],
+        ["Neto Total Procesado (Kg)", totalNeto],
+        ["Promedio Kilos/Viaje (Kg)", totalViajes > 0 ? (totalNeto / totalViajes).toFixed(2) : 0],
+        ["", ""],
+        ["ORIGEN DE LA UVA (KG)", ""],
+        ["Kilos Propios (Salentein)", kgPropios],
+        ["Kilos Terceros", kgTerceros],
+        ["% Propios", totalNeto > 0 ? ((kgPropios / totalNeto) * 100).toFixed(2) + '%' : '0%'],
+        ["% Terceros", totalNeto > 0 ? ((kgTerceros / totalNeto) * 100).toFixed(2) + '%' : '0%'],
+        ["", ""],
+        ["DESGLOSE POR LAGAR DE DESCARGA", "NETO (KG)", "CANT. VIAJES"]
+    ];
+
+    // Agregar filas de lagares
+    for (let lag in resumenLagar) {
+        datosAnalitica.push([`Lagar: ${lag}`, resumenLagar[lag].neto, resumenLagar[lag].viajes]);
+    }
+
+    // ==========================================
+    // 2. CÁLCULO DE CUMPLIMIENTO (TU LÓGICA ORIGINAL)
+    // ==========================================
     let resumenPV = {};
     fin.forEach(v => {
         const key = `${v.productor}___${v.variedad}`;
@@ -1197,8 +1260,19 @@ function exportarExcelRendimiento() {
         });
     }
 
-    const ws = XLSX.utils.json_to_sheet(dataExcel);
+    // ==========================================
+    // 3. GENERACIÓN Y DESCARGA DEL LIBRO EXCEL
+    // ==========================================
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Rendimientos");
-    XLSX.writeFile(wb, `Rendimiento_Recepcion_${new Date().toISOString().slice(0,10)}.xlsx`);
+
+    // Hoja 1: Placa Analítica
+    const wsAnalitica = XLSX.utils.aoa_to_sheet(datosAnalitica);
+    XLSX.utils.book_append_sheet(wb, wsAnalitica, "Placa Analítica");
+
+    // Hoja 2: Cumplimiento / Entregas
+    const wsRendimientos = XLSX.utils.json_to_sheet(dataExcel);
+    XLSX.utils.book_append_sheet(wb, wsRendimientos, "Cumplimiento Entregas");
+
+    // Guardar archivo con la fecha actual
+    XLSX.writeFile(wb, `Rendimiento_y_Analitica_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
