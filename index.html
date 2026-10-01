@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bodega Portillo - LagarControl</title>
+
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+
+    <!-- Librería para Exportación a Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="brand-logo-container">
+            <svg class="brand-logo-svg" viewBox="0 0 420 170" xmlns="http://www.w3.org/2000/svg">
+                <path id="curve-header" d="M 50,60 A 150,50 0 0,1 370,60" fill="transparent"/>
+                <text font-family="'Times New Roman', serif" font-size="13" font-weight="bold" fill="#0f172a" letter-spacing="6">
+                    <textPath href="#curve-header" startOffset="50%" text-anchor="middle">ESTATE BOTTLED</textPath>
+                </text>
+                <text x="200" y="112" font-family="'Times New Roman', serif" font-size="70" font-weight="bold" fill="#0f172a" letter-spacing="4" text-anchor="middle">PORTILLO</text>
+                <polygon points="25,138 90,138 80,140 25,140" fill="#d97706"/>
+                <text x="200" y="144" font-family="'Times New Roman', serif" font-size="16" font-weight="bold" fill="#d97706" letter-spacing="4" text-anchor="middle">SALENTEIN WINES</text>
+                <polygon points="310,138 375,138 375,140 320,140" fill="#d97706"/>
+            </svg>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div id="usuario-sesion-badge" style="font-size: 0.8rem; font-weight: bold; color: var(--accent-blue); background: #e2e8f0; padding: 6px 12px; border-radius: 6px;">
+                ROL: CONSULTA (SOLO LECTURA)
+            </div>
+            <button id="btn-cambiar-rol" class="btn btn-secondary btn-sm" onclick="abrirModalLogin()">🔑 CAMBIAR ROL / INICIAR SESIÓN</button>
+            <button id="btn-cerrar-sesion-global" class="btn btn-danger btn-sm hidden" onclick="cerrarSesionGlobal()">🚪 CERRAR SESIÓN</button>
+            <nav class="nav-links">
+                <button class="nav-btn active" onclick="mostrarPantalla('pantalla-inicio', event)">INICIO</button>
+                <button id="nav-btn-ingreso" class="nav-btn" onclick="mostrarPantalla('pantalla-ingreso', event)">NUEVO INGRESO</button>
+                <button class="nav-btn" onclick="mostrarPantalla('pantalla-planta', event)">PLANTA</button>
+                <button class="nav-btn" onclick="mostrarPantalla('pantalla-finalizados', event)">FINALIZADOS</button>
+                <button id="nav-btn-admin" class="nav-btn" onclick="mostrarPantalla('pantalla-admin', event)">ADMINISTRACIÓN</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- INICIO -->
+        <section id="pantalla-inicio" class="pantalla">
+            <div class="header-section">
+                <h2>Resumen General de Ingresos</h2>
+            </div>
+            <div class="dashboard-grid">
+                <div class="dash-card">
+                    <h3>Camiones en Planta</h3>
+                    <div class="number" id="dash-en-planta">0</div>
+                </div>
+                <div class="dash-card">
+                    <h3>Viajes Finalizados</h3>
+                    <div class="number" id="dash-finalizados">0</div>
+                </div>
+                <div class="dash-card">
+                    <h3>Total de Viajes</h3>
+                    <div class="number" id="dash-total">0</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NUEVO INGRESO -->
+        <section id="pantalla-ingreso" class="pantalla hidden">
+            <div class="header-section">
+                <h2>Registrar Nuevo Ingreso de Viaje</h2>
+                <div class="viaje-badge" id="badge-proximo-viaje">Próximo Viaje N°: 000001</div>
+            </div>
+
+            <form id="form-nuevo-ingreso" onsubmit="guardarNuevoIngreso(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Productor:</label>
+                        <select id="select-productor" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Variedad:</label>
+                        <select id="select-variedad" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Producto *:</label>
+                        <select id="select-tipo-producto" class="form-control" required>
+                            <option value="">-- SELECCIONAR TIPO DE PRODUCTO --</option>
+                            <option value="TRADICIONAL">TRADICIONAL</option>
+                            <option value="ORGÁNICO">ORGÁNICO</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Destino:</label>
+                        <select id="select-destino" class="form-control" required>
+                            <option value="">-- SELECCIONAR DESTINO --</option>
+                            <option value="VINO">VINO</option>
+                            <option value="BASE">BASE</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Finca:</label>
+                        <select id="select-finca" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cuartel:</label>
+                        <input type="text" id="input-cuartel" class="form-control" placeholder="Ej: Cuartel 4">
+                    </div>
+                    <div class="form-group">
+                        <label>Año Cosecha:</label>
+                        <input type="number" id="input-anio" class="form-control" value="2027" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Color:</label>
+                        <select id="select-color" class="form-control">
+                            <option value="TINTO">TINTO</option>
+                            <option value="BLANCO">BLANCO</option>
+                            <option value="ROSADO">ROSADO</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo Cosecha:</label>
+                        <select id="select-cosecha" class="form-control">
+                            <option value="MANUAL">MANUAL</option>
+                            <option value="MECÁNICA">MECÁNICA</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Estado Sanitario de Uva:</label>
+                        <select id="select-estado-sanitario" class="form-control" required>
+                            <option value="">-- SELECCIONAR --</option>
+                            <option value="MÍNIMO ACEPTABLE">MÍNIMO ACEPTABLE</option>
+                            <option value="REGULAR">REGULAR</option>
+                            <option value="BUENO">BUENO</option>
+                            <option value="ÓPTIMO">ÓPTIMO</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Proveedor Flete / Transportista:</label>
+                        <select id="select-flete" class="form-control" required></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tipo de Camión:</label>
+                        <select id="select-tipo-camion" class="form-control" required>
+                            <option value="">-- SELECCIONAR --</option>
+                            <option value="VOLQUETE">VOLQUETE</option>
+                            <option value="BATEA">BATEA</option>
+                            <option value="CHASIS PLANO">CHASIS PLANO</option>
+                            <option value="TRACTOR CON ACOPLADO">TRACTOR CON ACOPLADO</option>
+                            <option value="EQUIPO">EQUIPO</option>
+                            <option value="OTROS">OTROS</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Patente Dominio:</label>
+                        <input type="text" id="input-patente" class="form-control" placeholder="ABC123CD" required style="text-transform: uppercase;">
+                    </div>
+                    <div class="form-group">
+                        <label>Chofer:</label>
+                        <input type="text" id="input-chofer" class="form-control" required style="text-transform: uppercase;">
+                    </div>
+                    <div class="form-group">
+                        <label>Peso Bruto (Kg):</label>
+                        <input type="number" id="input-bruto" class="form-control" placeholder="Ej: 23650" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Número de Remito:</label>
+                        <input type="text" id="input-remito" class="form-control" placeholder="Ej: 1-896 -> R-0001-00000896" onblur="formatearRemitoEspecial(this)" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Operador Ingreso:</label>
+                        <select id="input-op-ingreso" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Lagar Operativo *:</label>
+                        <select id="select-lagar-operativo" class="form-control" required>
+                            <option value="">-- SELECCIONAR --</option>
+                            <option value="LAGAR 1">LAGAR 1</option>
+                            <option value="LAGAR 2">LAGAR 2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cant. Personas en Lagar *:</label>
+                        <input type="number" id="input-cant-personas-lagar" class="form-control" min="1" placeholder="Ej: 3" required>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Captura de Fotografía (Remito / Camión):</label>
+                        <div class="camera-container">
+                            <video id="webcam-video" autoplay playsinline></video>
+                            <canvas id="photo-canvas" class="hidden"></canvas>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="capturarFoto()">Capturar Foto</button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="cambiarCamara()">📷 Cambiar Cámara</button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="reiniciarCamara()">Recapturar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Observaciones de Ingreso:</label>
+                        <textarea id="input-observaciones" class="form-control" rows="2" placeholder="SIN OBSERVACIONES" style="text-transform: uppercase;"></textarea>
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px; text-align: right;">
+                    <button type="submit" id="btn-guardar-ingreso" class="btn btn-success">Guardar e Ingresar a Planta</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- PLANTA -->
+        <section id="pantalla-planta" class="pantalla hidden">
+            <div class="header-section">
+                <h2>Camiones Actualmente en Planta</h2>
+            </div>
+            <div class="table-container">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Viaje N°</th>
+                            <th>Entrada</th>
+                            <th>Tiempo Permanencia</th>
+                            <th>Productor</th>
+                            <th>Variedad</th>
+                            <th>Producto</th>
+                            <th>Destino</th>
+                            <th>Patente</th>
+                            <th>Chofer</th>
+                            <th>Bruto (Kg)</th>
+                            <th>Foto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-planta"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- FINALIZADOS -->
+        <section id="pantalla-finalizados" class="pantalla hidden">
+            <div class="header-section">
+                <h2>Historial de Viajes Finalizados</h2>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-success btn-sm" onclick="exportarExcelDetalle()">Exportar Detalle</button>
+                    <button class="btn btn-primary btn-sm" onclick="exportarExcelRendimiento()">📊 Exportar Rendimientos</button>
+                </div>
+            </div>
+
+            <!-- PLACA ANALÍTICA -->
+            <div class="placa-analitica-container">
+                <h3 style="color: var(--accent-blue); font-size: 0.95rem; text-transform: uppercase; margin-bottom: 15px;">📊 Placa Analítica & Vistazo General de Rendimientos</h3>
+                
+                <div class="dashboard-grid" style="margin-bottom: 15px;">
+                    <div class="dash-card">
+                        <h3>Kilos Totales</h3>
+                        <div class="number" id="placa-kilos-totales">0 Kg</div>
+                    </div>
+                    <div class="dash-card">
+                        <h3>Kilos Propios (Salentein SA)</h3>
+                        <div class="number" style="color: var(--accent-green);" id="placa-kilos-propios">0 Kg</div>
+                    </div>
+                    <div class="dash-card">
+                        <h3>Kilos Terceros General</h3>
+                        <div class="number" style="color: #d97706;" id="placa-kilos-terceros">0 Kg</div>
+                    </div>
+                </div>
+
+                <div class="placa-grid">
+                    <div class="placa-card">
+                        <h4>Kg Procesados por Variedad</h4>
+                        <div id="placa-variedades-list" style="font-size: 0.85rem; line-height: 1.6;">-</div>
+                    </div>
+                    <div class="placa-card">
+                        <h4>Kilos por Productor y Variedad (Ingresados / Planificados)</h4>
+                        <div id="placa-productores-list" style="font-size: 0.85rem; line-height: 1.6; max-height: 200px; overflow-y: auto;">-</div>
+                    </div>
+                    <div class="placa-card">
+                        <h4>Uso de Lagares & Personal</h4>
+                        <div id="placa-lagares-list" style="font-size: 0.85rem; line-height: 1.6;">-</div>
+                    </div>
+                    <div class="placa-card">
+                        <h4>Atención / Observaciones Camioneros</h4>
+                        <div id="placa-observaciones-list" style="font-size: 0.85rem; line-height: 1.6;">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="input-buscar-finalizados" class="form-control" placeholder="🔍 Filtrar por Remito, Productor, Variedad, Patente o Chofer..." onkeyup="filtrarFinalizados()">
+            </div>
+
+            <div class="table-container">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Viaje N°</th>
+                            <th>Entrada / Salida</th>
+                            <th>Productor</th>
+                            <th>Variedad</th>
+                            <th>Producto</th>
+                            <th>Calidad</th>
+                            <th>Destino</th>
+                            <th>Patente</th>
+                            <th>Bruto (Kg)</th>
+                            <th>Tara (Kg)</th>
+                            <th>Neto (Kg)</th>
+                            <th>Remito</th>
+                            <th>Foto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-finalizados"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ADMINISTRACIÓN -->
+        <section id="pantalla-admin" class="pantalla hidden">
+            <div class="header-section">
+                <h2>Panel de Administración y Configuración</h2>
+                <button id="btn-cerrar-sesion" class="btn btn-danger btn-sm hidden" onclick="cerrarSesionAdmin()">Cerrar Sesión Admin</button>
+            </div>
+
+            <div id="admin-login-box" style="max-width: 400px; margin: 40px auto; text-align: center; padding: 25px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px;">
+                <h3 style="margin-bottom: 20px; font-size: 1rem; color: var(--accent-blue); text-transform: uppercase;">AUTENTICACIÓN REQUERIDA</h3>
+
+                <input type="password" id="admin-pass-input" placeholder="Ingrese Contraseña de Administrador" class="form-control" style="margin-bottom: 15px; text-align: center;">
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="autenticarAdmin()">Ingresar como Administrador</button>
+            </div>
+
+            <div id="admin-content-box" class="hidden">
+                <div style="margin-bottom: 35px;">
+                    <h3 style="color: var(--accent-blue); margin-bottom: 15px; font-size: 1rem; text-transform: uppercase;">Gestión de Nombres y Contraseñas de Operadores</h3>
+                    <div class="table-container" style="max-width: 650px;">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Operador N°</th>
+                                    <th>Nombre Operador</th>
+                                    <th>Contraseña</th>
+                                    <th style="text-align: right;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-operadores-admin"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 30px 0;">
+
+                <div style="margin-bottom: 35px;">
+                    <h3 style="color: var(--accent-blue); margin-bottom: 15px; font-size: 1rem; text-transform: uppercase;">Gestión de Tablas Maestras</h3>
+                    <div class="form-grid" style="margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label>Categoría a Administrar:</label>
+                            <select id="select-cat-maestra" class="form-control" onchange="renderizarGestionMaestra()">
+                                <option value="productores">Productores</option>
+                                <option value="variedades">Variedades</option>
+                                <option value="fincas">Fincas</option>
+                                <option value="fletes">Proveedores de Flete</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Nuevo Elemento:</label>
+                            <input type="text" id="input-nuevo-maestro" class="form-control" placeholder="Nombre / Descripción" style="text-transform: uppercase;">
+                        </div>
+                        <div class="form-group" style="justify-content: flex-end;">
+                            <button class="btn btn-success" onclick="agregarElementoMaestro()">Agregar</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container" style="max-width: 600px;">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre / Registro</th>
+                                    <th style="text-align: right;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-maestro-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 30px 0;">
+
+                <div style="margin-bottom: 35px;">
+                    <h3 style="color: var(--accent-blue); margin-bottom: 15px; font-size: 1rem; text-transform: uppercase;">Planificación: Kilos Pactados por Productor y Variedad</h3>
+                    <div class="form-grid" style="margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label>Productor (Razón Social):</label>
+                            <select id="select-plan-productor" class="form-control"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Varietal:</label>
+                            <select id="select-plan-variedad" class="form-control"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Kg Pactados / Planificados:</label>
+                            <input type="number" id="input-plan-kg" class="form-control" placeholder="Ej: 50000">
+                        </div>
+                        <div class="form-group" style="justify-content: flex-end;">
+                            <button class="btn btn-success" onclick="guardarPlanificacionKg()">Cargar Planificación</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Razón Social / Productor</th>
+                                    <th>Varietal</th>
+                                    <th>Kg Pactados / Planificados</th>
+                                    <th style="text-align: right;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-planificacion-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 30px 0;">
+
+                <div style="margin-bottom: 35px;">
+                    <h3 style="color: var(--accent-blue); margin-bottom: 15px; font-size: 1rem; text-transform: uppercase;">Edición / Corrección de Viajes</h3>
+                    <div class="table-container">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Viaje N°</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                    <th>Productor</th>
+                                    <th>Variedad</th>
+                                    <th>Destino</th>
+                                    <th>Patente</th>
+                                    <th>Remito</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-admin-edicion"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 30px 0;">
+
+                <div style="background: #fef2f2; border: 1px solid var(--accent-red); padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                    <h3 style="color: var(--accent-red); margin-bottom: 10px; font-size: 1rem; text-transform: uppercase;">Mantenimiento de Datos</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Permite reiniciar la base de datos a 0 con protocolo de seguridad reinforced.</p>
+                    <button class="btn btn-danger" onclick="iniciarProcesoReiniciar()">⚠ REINICIAR DATOS A 0</button>
+                </div>
+
+                <div>
+                    <h3 style="color: var(--text-main); margin-bottom: 15px; font-size: 0.95rem; text-transform: uppercase;">📋 Registro Histórico de Reinicios de Sistema</h3>
+                    <div class="table-container">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha y Hora</th>
+                                    <th>Usuario / Autorización</th>
+                                    <th>Acción Realizada</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-log-reinicios"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SPLASH -->
+    <div id="splash-screen" class="splash-overlay">
+        <div class="splash-content">
+            <svg class="brand-logo-svg" viewBox="0 0 420 170" xmlns="http://www.w3.org/2000/svg" style="height: 90px; margin-bottom: 15px;">
+                <path id="curve-splash" d="M 50,60 A 150,50 0 0,1 370,60" fill="transparent"/>
+                <text font-family="'Times New Roman', serif" font-size="13" font-weight="bold" fill="#0f172a" letter-spacing="6">
+                    <textPath href="#curve-splash" startOffset="50%" text-anchor="middle">ESTATE BOTTLED</textPath>
+                </text>
+                <text x="200" y="112" font-family="'Times New Roman', serif" font-size="70" font-weight="bold" fill="#0f172a" letter-spacing="4" text-anchor="middle">PORTILLO</text>
+                <polygon points="25,138 90,138 80,140 25,140" fill="#d97706"/>
+                <text x="200" y="144" font-family="'Times New Roman', serif" font-size="16" font-weight="bold" fill="#d97706" letter-spacing="4" text-anchor="middle">SALENTEIN WINES</text>
+                <polygon points="310,138 375,138 375,140 320,140" fill="#d97706"/>
+            </svg>
+            <h2>SISTEMA DE CONTROL DE INGRESO DE UVA</h2>
+            <p>GESTIÓN DE LAGAR & RECEPCIÓN</p>
+            <button class="btn btn-primary" style="margin-top: 25px; padding: 12px 28px; font-size: 1rem;" onclick="cerrarSplash()">INGRESAR AL SISTEMA</button>
+        </div>
+    </div>
+
+    <!-- MODAL SELECCIÓN DE ROL / LOGIN -->
+    <div id="modal-login-roles" class="modal hidden">
+        <div class="modal-content" style="max-width: 420px;">
+            <h2 style="color: var(--accent-blue); margin-bottom: 15px; font-size: 1.1rem; text-align: center;">CONTROL DE ACCESO Y ROLES</h2>
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>SELECCIONAR ROL:</label>
+                <select id="login-select-rol" class="form-control" onchange="evaluarCampoPasswordLogin()">
+                    <option value="CONSULTA">CONSULTA (SOLO LECTURA)</option>
+                    <option value="OPERADOR">OPERADOR</option>
+                    <option value="ADMIN">ADMINISTRADOR GENERAL</option>
+                </select>
+            </div>
+
+            <div id="group-login-pass" class="form-group hidden" style="margin-bottom: 20px;">
+                <label>CONTRASEÑA DE ACCESO:</label>
+                <input type="password" id="login-input-pass" class="form-control" placeholder="Ingrese contraseña">
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="cerrarModal('modal-login-roles')">CANCELAR</button>
+                <button class="btn btn-primary" onclick="autenticarLoginModal()">INGRESAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL VER FOTOGRAFÍA -->
+    <div id="modal-ver-foto" class="modal hidden">
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <h2 style="color: var(--accent-blue); margin-bottom: 15px; font-size: 1.1rem;">VISUALIZACIÓN DE FOTOGRAFÍA</h2>
+            <div style="margin-bottom: 20px; background: #000; border-radius: 8px; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 250px;">
+                <img id="img-modal-preview" src="" alt="Fotografía Capturada" style="max-width: 100%; max-height: 65vh; object-fit: contain;">
+            </div>
+            <div style="display: flex; justify-content: center;">
+                <button class="btn btn-secondary" style="padding: 10px 24px; font-weight: bold;" onclick="cerrarModal('modal-ver-foto')">⬅️ REGRESAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FINALIZAR VIAJE -->
+    <div id="modal-salida" class="modal hidden">
+        <div class="modal-content">
+            <h2 style="color: var(--accent-blue); margin-bottom: 15px; font-size: 1.1rem;">FINALIZAR VIAJE</h2>
+            <input type="hidden" id="salida-id-viaje">
+
+            <div class="info-card-box">
+                <p><strong>REMITO:</strong> <span id="salida-remito"></span></p>
+                <p><strong>PRODUCTOR:</strong> <span id="salida-productor"></span></p>
+                <p><strong>VARIEDAD:</strong> <span id="salida-variedad"></span></p>
+                <p><strong>TIPO PRODUCTO:</strong> <span id="salida-tipo-producto"></span></p>
+                <p><strong>DESTINO:</strong> <span id="salida-destino"></span></p>
+                <p><strong>TIPO DE COSECHA:</strong> <span id="salida-cosecha"></span></p>
+                <p><strong>TRANSPORTE / FLETE:</strong> <span id="salida-flete"></span></p>
+                <p><strong>PESO BRUTO:</strong> <span id="salida-bruto"></span> KG</p>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>OPERADOR QUE REALIZA LA FINALIZACIÓN *</label>
+                <select id="salida-input-op" class="form-control" required></select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>NIVEL DE CALIDAD (A FINALIZAR VIAJE) *</label>
+                <select id="salida-input-calidad" class="form-control">
+                    <option value="">-- SELECCIONAR CALIDAD --</option>
+                    <option value="KILLKA">KILLKA</option>
+                    <option value="FEP">FEP</option>
+                    <option value="BASE N4">BASE N4</option>
+                    <option value="BASE N6">BASE N6</option>
+                    <option value="SALENTEIN">SALENTEIN</option>
+                    <option value="NÚMINA">NÚMINA</option>
+                    <option value="BASE N3">BASE N3</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>TARA (KG) *</label>
+                <input type="number" id="salida-input-tara" class="form-control" placeholder="Ingrese Tara" oninput="calcularNetoEnVivo()" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>OT (A COMPLETAR MANUAL) *</label>
+                <input type="text" id="salida-input-ot" class="form-control" placeholder="Ingrese OT" style="text-transform: uppercase;" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>AZ (A COMPLETAR MANUAL) *</label>
+                <input type="text" id="salida-input-az" class="form-control" placeholder="Ingrese AZ" style="text-transform: uppercase;" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>PESO NETO CALCULADO (KG)</label>
+                <input type="text" id="salida-input-neto" class="form-control" readonly style="background-color: #f1f5f9; color: var(--accent-green); font-weight: bold;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>OBSERVACIONES DE SALIDA</label>
+                <textarea id="salida-input-obs" class="form-control" rows="2" placeholder="SIN OBSERVACIONES" style="text-transform: uppercase;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="cerrarModal('modal-salida')">CANCELAR</button>
+                <button class="btn btn-success" id="btn-confirmar-salida" onclick="confirmarSalidaViaje()">FINALIZAR VIAJE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDICIÓN ADMIN -->
+    <div id="modal-editar-admin" class="modal hidden">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <h2 style="color: var(--accent-blue); margin-bottom: 15px; font-size: 1.1rem;">EDITAR DATOS DE VIAJE N° <span id="edit-admin-id-label"></span></h2>
+            <input type="hidden" id="edit-admin-id">
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Productor:</label>
+                    <select id="edit-admin-productor" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label>Variedad:</label>
+                    <select id="edit-admin-variedad" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo Producto:</label>
+                    <select id="edit-admin-tipo-producto" class="form-control">
+                        <option value="TRADICIONAL">TRADICIONAL</option>
+                        <option value="ORGÁNICO">ORGÁNICO</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nivel Calidad:</label>
+                    <select id="edit-admin-calidad" class="form-control">
+                        <option value="">-- DATO VACÍO --</option>
+                        <option value="KILLKA">KILLKA</option>
+                        <option value="FEP">FEP</option>
+                        <option value="BASE N4">BASE N4</option>
+                        <option value="BASE N6">BASE N6</option>
+                        <option value="SALENTEIN">SALENTEIN</option>
+                        <option value="NÚMINA">NÚMINA</option>
+                        <option value="BASE N3">BASE N3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Destino:</label>
+                    <select id="edit-admin-destino" class="form-control">
+                        <option value="VINO">VINO</option>
+                        <option value="BASE">BASE</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Finca:</label>
+                    <select id="edit-admin-finca" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label>Cuartel:</label>
+                    <input type="text" id="edit-admin-cuartel" class="form-control" style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label>Año Cosecha:</label>
+                    <input type="number" id="edit-admin-anio" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Color:</label>
+                    <select id="edit-admin-color" class="form-control">
+                        <option value="TINTO">TINTO</option>
+                        <option value="BLANCO">BLANCO</option>
+                        <option value="ROSADO">ROSADO</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo Cosecha:</label>
+                    <select id="edit-admin-cosecha" class="form-control">
+                        <option value="MANUAL">MANUAL</option>
+                        <option value="MECÁNICA">MECÁNICA</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Estado Sanitario:</label>
+                    <select id="edit-admin-estado-sanitario" class="form-control">
+                        <option value="MÍNIMO ACEPTABLE">MÍNIMO ACEPTABLE</option>
+                        <option value="REGULAR">REGULAR</option>
+                        <option value="BUENO">BUENO</option>
+                        <option value="ÓPTIMO">ÓPTIMO</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Flete / Transportista:</label>
+                    <select id="edit-admin-flete" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo Camión:</label>
+                    <select id="edit-admin-tipo-camion" class="form-control">
+                        <option value="VOLQUETE">VOLQUETE</option>
+                        <option value="BATEA">BATEA</option>
+                        <option value="CHASIS PLANO">CHASIS PLANO</option>
+                        <option value="TRACTOR CON ACOPLADO">TRACTOR CON ACOPLADO</option>
+                        <option value="EQUIPO">EQUIPO</option>
+                        <option value="OTROS">OTROS</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Patente:</label>
+                    <input type="text" id="edit-admin-patente" class="form-control" style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label>Chofer:</label>
+                    <input type="text" id="edit-admin-chofer" class="form-control" style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label>Remito:</label>
+                    <input type="text" id="edit-admin-remito" class="form-control" onblur="formatearRemitoEspecial(this)">
+                </div>
+                <div class="form-group">
+                    <label>Operador Ingreso:</label>
+                    <select id="edit-admin-op-ingreso" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label>Operador Salida:</label>
+                    <select id="edit-admin-op-salida" class="form-control">
+                        <option value="">-- NINGUNO --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Lagar Operativo:</label>
+                    <select id="edit-admin-lagar-operativo" class="form-control">
+                        <option value="LAGAR 1">LAGAR 1</option>
+                        <option value="LAGAR 2">LAGAR 2</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Personas en Lagar:</label>
+                    <input type="number" id="edit-admin-cant-personas" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Peso Bruto (Kg):</label>
+                    <input type="number" id="edit-admin-bruto" class="form-control" oninput="calcularNetoEdicionEnVivo()">
+                </div>
+                <div class="form-group">
+                    <label>Tara (Kg):</label>
+                    <input type="number" id="edit-admin-tara" class="form-control" oninput="calcularNetoEdicionEnVivo()">
+                </div>
+                <div class="form-group">
+                    <label>Peso Neto (Kg):</label>
+                    <input type="number" id="edit-admin-neto" class="form-control" readonly style="background-color: #f1f5f9;">
+                </div>
+                <div class="form-group">
+                    <label>OT:</label>
+                    <input type="text" id="edit-admin-ot" class="form-control" style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label>AZ:</label>
+                    <input type="text" id="edit-admin-az" class="form-control" style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label>Estado del Viaje:</label>
+                    <select id="edit-admin-estado" class="form-control">
+                        <option value="EN PLANTA">EN PLANTA</option>
+                        <option value="FINALIZADO">FINALIZADO</option>
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <label>Observaciones Ingreso:</label>
+                    <textarea id="edit-admin-obs-ingreso" class="form-control" rows="2" style="text-transform: uppercase;"></textarea>
+                </div>
+                <div class="form-group full-width">
+                    <label>Observaciones Salida:</label>
+                    <textarea id="edit-admin-obs-salida" class="form-control" rows="2" style="text-transform: uppercase;"></textarea>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="cerrarModal('modal-editar-admin')">CANCELAR</button>
+                <button class="btn btn-success" onclick="guardarEdicionAdmin()">GUARDAR CAMBIOS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMACIÓN / PASS ELIMINAR DATOS -->
+    <div id="modal-pass-eliminar" class="modal hidden">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <h2 style="color: var(--accent-red); margin-bottom: 15px; font-size: 1.1rem;">⚠️ REINICIO DE BASE DE DATOS</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Ingrese la clave especial de eliminación de datos para confirmar el formateo completo a cero.</p>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <input type="password" id="input-pass-eliminar" class="form-control" placeholder="Clave de seguridad" style="text-align: center;">
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn btn-secondary" onclick="cerrarModal('modal-pass-eliminar')">CANCELAR</button>
+                <button class="btn btn-danger" onclick="validarYEjecutarReinicio()">CONFIRMAR REINICIO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TICKET PREVIEW -->
+    <div id="modal-ticket-preview" class="modal hidden">
+        <div class="ticket-modal-wrapper">
+            <div class="ticket-box">
+                <div class="ticket-header">
+                    <div style="font-weight: bold; font-size: 14px;">BODEGA PORTILLO</div>
+                    <div class="ticket-title">RECEPCIÓN DE MATERIA PRIMA</div>
+                    <div class="ticket-subtitle">COMPROBANTE DE PESAJE</div>
+                </div>
+
+                <hr class="ticket-hr">
+
+                <div class="ticket-row-single"><strong>N° VIAJE:</strong> <span id="tk-viaje"></span></div>
+                <div class="ticket-row-single"><strong>FECHA:</strong> <span id="tk-fecha"></span></div>
+                <div class="ticket-row-single"><strong>HORA ENTRADA:</strong> <span id="tk-hora-entrada"></span></div>
+                <div class="ticket-row-single"><strong>HORA SALIDA:</strong> <span id="tk-hora-salida"></span></div>
+
+                <hr class="ticket-hr">
+
+                <div class="ticket-row-single"><strong>OPERADOR INGRESO:</strong> <span id="tk-op-ingreso"></span></div>
+                <div class="ticket-row-single"><strong>OPERADOR SALIDA:</strong> <span id="tk-op-salida"></span></div>
+                <div class="ticket-row-single"><strong>REMITO:</strong> <span id="tk-remito"></span></div>
+
+                <hr class="ticket-hr">
+
+                <div class="ticket-row-single"><strong>PRODUCTOR:</strong> <span id="tk-productor"></span></div>
+                <div class="ticket-row-single"><strong>VARIEDAD:</strong> <span id="tk-variedad"></span></div>
+                <div class="ticket-row-single"><strong>TIPO PRODUCTO:</strong> <span id="tk-tipo-producto"></span></div>
+                <div class="ticket-row-single"><strong>CALIDAD:</strong> <span id="tk-calidad"></span></div>
+                <div class="ticket-row-single"><strong>DESTINO:</strong> <span id="tk-destino"></span></div>
+                <div class="ticket-row-single"><strong>FINCA:</strong> <span id="tk-finca"></span></div>
+                <div class="ticket-row-single"><strong>CUARTEL:</strong> <span id="tk-cuartel"></span></div>
+                <div class="ticket-row-single"><strong>AÑO:</strong> <span id="tk-anio"></span></div>
+                <div class="ticket-row-single"><strong>COLOR:</strong> <span id="tk-color"></span></div>
+                <div class="ticket-row-single"><strong>COSECHA:</strong> <span id="tk-cosecha"></span></div>
+
+                <hr class="ticket-hr">
+
+                <div class="ticket-row-single"><strong>FLETE:</strong> <span id="tk-flete"></span></div>
+                <div class="ticket-row-single"><strong>TIPO CAMIÓN:</strong> <span id="tk-tipo-camion"></span></div>
+                <div class="ticket-row-single"><strong>PATENTE:</strong> <span id="tk-patente"></span></div>
+                <div class="ticket-row-single"><strong>CHOFER:</strong> <span id="tk-chofer"></span></div>
+
+                <hr class="ticket-hr">
+
+                <div class="ticket-row-single"><strong>PESO BRUTO:</strong> <span id="tk-bruto"></span> KG</div>
+                <div class="ticket-row-single"><strong>TARA:</strong> <span id="tk-tara"></span> KG</div>
+                <div class="ticket-row-single"><strong>PESO NETO:</strong> <span id="tk-neto"></span> KG</div>
+                
+                <hr class="ticket-hr">
+
+                <div class="ticket-row-single"><strong>OT:</strong> <span id="tk-ot"></span></div>
+                <div class="ticket-row-single"><strong>AZ:</strong> <span id="tk-az"></span></div>
+
+                <hr class="ticket-hr">
+
+                <div class="ticket-row-single"><strong>OBSERVACIONES:</strong></div>
+                <div style="font-size: 11px; margin-top: 4px;" id="tk-observaciones"></div>
+
+                <hr class="ticket-hr">
+
+                <div style="text-align: center; margin-top: 15px; font-size: 10px;">
+                    *** FIRMA Y CONFORMIDAD ***
+                </div>
+
+                <div style="margin-top: 35px; display: flex; flex-direction: column; gap: 30px;">
+                    <div style="text-align: center;">
+                        <div style="border-top: 1px dashed #000; width: 80%; margin: 0 auto 5px auto;"></div>
+                        <div style="font-size: 10px; font-weight: bold;">FIRMA RESPONSABLE DE BODEGA</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="border-top: 1px dashed #000; width: 80%; margin: 0 auto 5px auto;"></div>
+                        <div style="font-size: 10px; font-weight: bold;">FIRMA CAMIONERO</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+                <button class="btn btn-secondary" onclick="cerrarModal('modal-ticket-preview')">CERRAR</button>
+                <button class="btn btn-primary" onclick="window.print()">IMPRIMIR TICKET</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIGURACIÓN Y SCRIPT DE CONFIGURACIÓN AUXILIAR -->
+    <script src="config.js"></script>
+
+    <!-- CONFIGURACIÓN DE FIREBASE E INICIALIZACIÓN DE PWA -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Credenciales del proyecto
+        const firebaseConfig = {
+            apiKey: "AIzaSyCfdvCVK0P72lC5a6SUE7rztptBhZqkJoE",
+            authDomain: "lagarcontrol-bep.firebaseapp.com",
+            databaseURL: "https://lagarcontrol-bep-default-rtdb.firebaseio.com",
+            projectId: "lagarcontrol-bep",
+            storageBucket: "lagarcontrol-bep.firebasestorage.app",
+            messagingSenderId: "958161450733",
+            appId: "1:958161450733:web:2918260302e218ac757ee4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.FirebaseDB = {
+            db,
+            ref,
+            push,
+            set,
+            onValue,
+            remove
+        };
+
+        // Registro del Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado:', reg.scope))
+                    .catch(err => console.log('Error registrando Service Worker:', err));
+            });
+        }
+    </script>
+
+    <!-- SCRIPT PRINCIPAL DE LÓGICA -->
+    <script src="app2.js"></script>
+</body>
+</html>
