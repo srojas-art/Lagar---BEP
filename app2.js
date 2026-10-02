@@ -521,6 +521,8 @@ function ejecutarAbrirModalSalida(id) {
     document.getElementById('salida-bruto').innerText = v.bruto ? v.bruto.toLocaleString() : '0';
 
     document.getElementById('salida-input-calidad').value = v.nivelCalidad || '';
+    document.getElementById('salida-input-lagar').value = v.lagarOperativo || '';
+    document.getElementById('salida-input-cant-personas').value = v.cantPersonasLagar || '';
     document.getElementById('salida-input-tara').value = v.tara || '';
     document.getElementById('salida-input-ot').value = v.ot || '';
     document.getElementById('salida-input-az').value = v.az || '';
@@ -541,12 +543,16 @@ function calcularNetoEnVivo() {
 
 async function confirmarSalidaViaje() {
     const id = document.getElementById('salida-id-viaje').value;
+    const lagar = document.getElementById('salida-input-lagar').value;
+    const cantPersonas = parseInt(document.getElementById('salida-input-cant-personas').value, 10);
     const opSalida = document.getElementById('salida-input-op').value;
     const calidad = document.getElementById('salida-input-calidad').value;
     const tara = parseFloat(document.getElementById('salida-input-tara').value);
     const ot = document.getElementById('salida-input-ot').value.trim();
     const az = document.getElementById('salida-input-az').value.trim();
 
+    if (!lagar) { alert("Seleccione el Lagar Operativo."); return; }
+    if (isNaN(cantPersonas) || cantPersonas <= 0) { alert("Ingrese una cantidad válida de personas."); return; }
     if (!opSalida) { alert("Seleccione el Operador de Salida."); return; }
     if (!calidad) { alert("Seleccione el Nivel de Calidad."); return; }
     if (isNaN(tara) || tara <= 0) { alert("Ingrese una Tara válida."); return; }
@@ -559,6 +565,8 @@ async function confirmarSalidaViaje() {
         viajes[idx].fechaSalida = new Date().toISOString();
         viajes[idx].opSalida = opSalida;
         viajes[idx].nivelCalidad = calidad;
+        viajes[idx].lagarOperativo = lagar;
+        viajes[idx].cantPersonasLagar = cantPersonas;
         viajes[idx].tara = tara;
         viajes[idx].neto = viajes[idx].bruto - tara;
         viajes[idx].ot = ot.toUpperCase();
