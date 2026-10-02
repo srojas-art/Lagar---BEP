@@ -192,18 +192,22 @@
                         <input type="number" id="input-cant-personas-lagar" class="form-control" min="1" placeholder="Ej: 3" required>
                     </div>
 
-                    <div class="form-group full-width">
-                        <label>Captura de Fotografía (Remito / Camión):</label>
-                        <div class="camera-container">
-                            <video id="webcam-video" autoplay playsinline></video>
-                            <canvas id="photo-canvas" class="hidden"></canvas>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
-                                <button type="button" class="btn btn-primary btn-sm" onclick="capturarFoto()">Capturar Foto</button>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="cambiarCamara()">📷 Cambiar Cámara</button>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="reiniciarCamara()">Recapturar</button>
-                            </div>
-                        </div>
-                    </div>
+                 <div class="form-group full-width">
+    <label>Captura de Fotografías (Remito / Camión):</label>
+    <div class="camera-container">
+        <video id="webcam-video" autoplay playsinline></video>
+        <canvas id="photo-canvas" class="hidden"></canvas>
+        
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="capturarFoto()">📷 Tomar Foto</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cambiarCamara()">🔄 Cambiar Cámara</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="limpiarFotos()">🗑️ Borrar Todas</button>
+        </div>
+
+        <!-- Contenedor para mostrar la galería de fotos capturadas -->
+        <div id="galeria-fotos-preview" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;"></div>
+    </div>
+</div>
 
                     <div class="form-group full-width">
                         <label>Observaciones de Ingreso:</label>
