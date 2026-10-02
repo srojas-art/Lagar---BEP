@@ -179,19 +179,6 @@
                         <label>Operador Ingreso:</label>
                         <select id="input-op-ingreso" class="form-control" required></select>
                     </div>
-                    <div class="form-group">
-                        <label>Lagar Operativo *:</label>
-                        <select id="select-lagar-operativo" class="form-control" required>
-                            <option value="">-- SELECCIONAR --</option>
-                            <option value="LAGAR 1">LAGAR 1</option>
-                            <option value="LAGAR 2">LAGAR 2</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Cant. Personas en Lagar *:</label>
-                        <input type="number" id="input-cant-personas-lagar" class="form-control" min="1" placeholder="Ej: 3" required>
-                    </div>
-
                  <div class="form-group full-width">
     <label>Captura de Fotografías (Remito / Camión):</label>
     <div class="camera-container">
@@ -577,7 +564,19 @@
                     <option value="BASE N3">BASE N3</option>
                 </select>
             </div>
+<div class="form-group" style="margin-bottom: 12px;">
+    <label>LAGAR OPERATIVO *</label>
+    <select id="salida-input-lagar" class="form-control" required>
+        <option value="">-- SELECCIONAR LAGAR --</option>
+        <option value="LAGAR 1">LAGAR 1</option>
+        <option value="LAGAR 2">LAGAR 2</option>
+    </select>
+</div>
 
+<div class="form-group" style="margin-bottom: 12px;">
+    <label>CANT. PERSONAS EN LAGAR *</label>
+    <input type="number" id="salida-input-cant-personas" class="form-control" min="1" placeholder="Ej: 3" required>
+</div>
             <div class="form-group" style="margin-bottom: 12px;">
                 <label>TARA (KG) *</label>
                 <input type="number" id="salida-input-tara" class="form-control" placeholder="Ingrese Tara" oninput="calcularNetoEnVivo()" required>
