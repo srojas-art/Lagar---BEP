@@ -1114,55 +1114,6 @@ function renderizarLogReinicios() {
     });
 }
 
-// --- EXPORTACIÓN DE EXCEL ---
-function exportarExcelDetalle() {
-    const fin = viajes.filter(v => v.estado === 'FINALIZADO');
-    if (fin.length === 0) { alert("No hay datos para exportar."); return; }
-
-    const dataExcel = fin.map(v => {
-        const fe = obtenerFechaValida(v.fechaEntrada);
-        const fs = obtenerFechaValida(v.fechaSalida);
-        return {
-            "Viaje N°": v.id,
-            "Estado": v.estado,
-            "Fecha Entrada": fe ? formatearFechaCompleta(fe) : '',
-            "Fecha Salida": fs ? formatearFechaCompleta(fs) : '',
-            "Remito": v.remito,
-            "Productor": v.productor,
-            "Variedad": v.variedad,
-            "Tipo Producto": v.tipoProducto || 'TRADICIONAL',
-            "Nivel Calidad": v.nivelCalidad || '',
-            "Destino": v.destino || 'VINO',
-            "Finca": v.finca,
-            "Cuartel": v.cuartel,
-            "Año": v.anio,
-            "Color": v.color,
-            "Tipo Cosecha": v.cosecha,
-            "Estado Sanitario": v.estadoSanitario,
-            "Flete": v.flete,
-            "Tipo Camión": v.tipoCamion,
-            "Patente": v.patente,
-            "Chofer": v.chofer,
-            "Bruto (Kg)": v.bruto,
-            "Tara (Kg)": v.tara,
-            "Neto (Kg)": v.neto,
-            "OT": v.ot,
-            "AZ": v.az,
-            "Operador Ingreso": v.opIngreso,
-            "Operador Salida": v.opSalida,
-            "Lagar": v.lagarOperativo,
-            "Personas Lagar": v.cantPersonasLagar,
-            "Obs Ingreso": v.observacionesIngreso,
-            "Obs Salida": v.observacionesSalida
-        };
-    });
-
-    const ws = XLSX.utils.json_to_sheet(dataExcel);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Detalle_Viajes");
-    XLSX.writeFile(wb, `Ingresos_Uva_Detalle_${new Date().toISOString().slice(0,10)}.xlsx`);
-}
-
 function exportarExcelRendimiento() {
     const fin = viajes.filter(v => v.estado === 'FINALIZADO');
     if (fin.length === 0) { alert("No hay datos para exportar."); return; }
@@ -1179,6 +1130,7 @@ function exportarExcelRendimiento() {
     let kgTerceros = 0;  // Terceros
 
     let resumenLagar = {};
+    let resumenPorDia = {}; // 👈 Acumulador de kilos ingresados por día
 
     fin.forEach(v => {
         const bruto = v.bruto || 0;
@@ -1189,7 +1141,7 @@ function exportarExcelRendimiento() {
         totalTara += tara;
         totalNeto += neto;
 
-        // Distribuir Propios vs Terceros (Ajusta 'SALENTEIN' según el valor real de tu sistema)
+        // Distribuir Propios vs Terceros
         const prodUpper = (v.productor || '').toUpperCase();
         if (prodUpper.includes('SALENTEIN') || prodUpper.includes('PROPIO')) {
             kgPropios += neto;
@@ -1198,10 +1150,21 @@ function exportarExcelRendimiento() {
         }
 
         // Totalizar por Lagar de descarga
-        const lagar = v.lagar || 'Sin Asignar';
+        const lagar = v.lagarOperativo || v.lagar || 'Sin Asignar';
         if (!resumenLagar[lagar]) resumenLagar[lagar] = { neto: 0, viajes: 0 };
         resumenLagar[lagar].neto += neto;
         resumenLagar[lagar].viajes += 1;
+
+        // Totalizar por Día (Extrae formato YYYY-MM-DD de la fecha)
+        let fechaStr = 'Sin Fecha';
+        const fechaObj = obtenerFechaValida(v.fechaEntrada || v.fechaIngreso || v.fecha);
+        if (fechaObj) {
+            fechaStr = fechaObj.toISOString().slice(0, 10);
+        }
+
+        if (!resumenPorDia[fechaStr]) resumenPorDia[fechaStr] = { neto: 0, viajes: 0 };
+        resumenPorDia[fechaStr].neto += neto;
+        resumenPorDia[fechaStr].viajes += 1;
     });
 
     // Armar matriz de datos para la hoja Placa Analítica
@@ -1219,8 +1182,16 @@ function exportarExcelRendimiento() {
         ["% Propios", totalNeto > 0 ? ((kgPropios / totalNeto) * 100).toFixed(2) + '%' : '0%'],
         ["% Terceros", totalNeto > 0 ? ((kgTerceros / totalNeto) * 100).toFixed(2) + '%' : '0%'],
         ["", ""],
-        ["DESGLOSE POR LAGAR DE DESCARGA", "NETO (KG)", "CANT. VIAJES"]
+        ["📅 KG INGRESADOS POR DÍA (TOTALES)", "NETO TOTAL (KG)", "CANT. VIAJES"]
     ];
+
+    // Ordenar fechas cronológicamente e insertarlas
+    const fechasOrdenadas = Object.keys(resumenPorDia).sort();
+    fechasOrdenadas.forEach(fecha => {
+        datosAnalitica.push([fecha, resumenPorDia[fecha].neto, resumenPorDia[fecha].viajes]);
+    });
+
+    datosAnalitica.push(["", ""], ["DESGLOSE POR LAGAR DE DESCARGA", "NETO (KG)", "CANT. VIAJES"]);
 
     // Agregar filas de lagares
     for (let lag in resumenLagar) {
@@ -1228,7 +1199,7 @@ function exportarExcelRendimiento() {
     }
 
     // ==========================================
-    // 2. CÁLCULO DE CUMPLIMIENTO (TU LÓGICA ORIGINAL)
+    // 2. CÁLCULO DE CUMPLIMIENTO POR PRODUCTOR Y VARIEDAD
     // ==========================================
     let resumenPV = {};
     fin.forEach(v => {
@@ -1273,6 +1244,6 @@ function exportarExcelRendimiento() {
     const wsRendimientos = XLSX.utils.json_to_sheet(dataExcel);
     XLSX.utils.book_append_sheet(wb, wsRendimientos, "Cumplimiento Entregas");
 
-    // Guardar archivo con la fecha actual
+    // Guardar archivo
     XLSX.writeFile(wb, `Rendimiento_y_Analitica_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
