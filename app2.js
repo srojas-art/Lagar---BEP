@@ -401,8 +401,8 @@ async function ejecutarGuardarNuevoIngreso() {
         az: '',
         remito: document.getElementById('input-remito')?.value || '',
         opIngreso: document.getElementById('input-op-ingreso')?.value || '',
-        lagarOperativo: '',
-        cantPersonasLagar: 0,
+        lagarOperativo: lagar,
+        cantPersonasLagar: cantPersonas,
         opSalida: '',
         observacionesIngreso: document.getElementById('input-observaciones')?.value.toUpperCase() || '',
         observacionesSalida: '',
@@ -521,8 +521,6 @@ function ejecutarAbrirModalSalida(id) {
     document.getElementById('salida-bruto').innerText = v.bruto ? v.bruto.toLocaleString() : '0';
 
     document.getElementById('salida-input-calidad').value = v.nivelCalidad || '';
-    document.getElementById('salida-input-lagar').value = v.lagarOperativo || '';
-    document.getElementById('salida-input-cant-personas').value = v.cantPersonasLagar || '';
     document.getElementById('salida-input-tara').value = v.tara || '';
     document.getElementById('salida-input-ot').value = v.ot || '';
     document.getElementById('salida-input-az').value = v.az || '';
@@ -543,16 +541,12 @@ function calcularNetoEnVivo() {
 
 async function confirmarSalidaViaje() {
     const id = document.getElementById('salida-id-viaje').value;
-    const lagar = document.getElementById('salida-input-lagar').value;
-    const cantPersonas = parseInt(document.getElementById('salida-input-cant-personas').value, 10);
     const opSalida = document.getElementById('salida-input-op').value;
     const calidad = document.getElementById('salida-input-calidad').value;
     const tara = parseFloat(document.getElementById('salida-input-tara').value);
     const ot = document.getElementById('salida-input-ot').value.trim();
     const az = document.getElementById('salida-input-az').value.trim();
 
-    if (!lagar) { alert("Seleccione el Lagar Operativo."); return; }
-    if (isNaN(cantPersonas) || cantPersonas <= 0) { alert("Ingrese una cantidad válida de personas."); return; }
     if (!opSalida) { alert("Seleccione el Operador de Salida."); return; }
     if (!calidad) { alert("Seleccione el Nivel de Calidad."); return; }
     if (isNaN(tara) || tara <= 0) { alert("Ingrese una Tara válida."); return; }
@@ -565,8 +559,6 @@ async function confirmarSalidaViaje() {
         viajes[idx].fechaSalida = new Date().toISOString();
         viajes[idx].opSalida = opSalida;
         viajes[idx].nivelCalidad = calidad;
-        viajes[idx].lagarOperativo = lagar;
-        viajes[idx].cantPersonasLagar = cantPersonas;
         viajes[idx].tara = tara;
         viajes[idx].neto = viajes[idx].bruto - tara;
         viajes[idx].ot = ot.toUpperCase();
@@ -739,16 +731,7 @@ function esProductorPropio(productor, finca) {
     return false;
 }
 
-// Variable global auxiliar para el viaje actualmente cargado en el ticket
-let viajeTicketActual = null;
-
 function abrirTicketPreview(v) {
-    viajeTicketActual = v;
-    
-    // Asignar el tipo por defecto a ORIGINAL
-    const elCopia = document.getElementById('tk-copia-tipo');
-    if (elCopia) elCopia.innerText = 'ORIGINAL';
-
     const feObj = obtenerFechaValida(v.fechaEntrada);
     const fsObj = obtenerFechaValida(v.fechaSalida);
 
@@ -795,31 +778,6 @@ function abrirTicketPreview(v) {
 function imprimirTicketDirecto(id) {
     const v = viajes.find(item => item.id === id);
     if (v) abrirTicketPreview(v);
-}
-
-// Función para imprimir especificando "ORIGINAL" o "DUPLICADO"
-function imprimirTicketConTipo(tipo) {
-    const elCopia = document.getElementById('tk-copia-tipo');
-    if (elCopia) elCopia.innerText = tipo;
-    window.print();
-}
-
-// Función para descargar el Ticket como PDF con dimensiones fijas (7cm x 17cm)
-function descargarTicketPDF() {
-    const elemento = document.getElementById('ticket-printable-area');
-    if (!elemento) return;
-
-    const idViaje = document.getElementById('tk-viaje').innerText || '000000';
-
-    const opciones = {
-        margin:       [2, 2, 2, 2],
-        filename:     `Ticket_Viaje_${idViaje}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'cm', format: [7, 17], orientation: 'portrait' }
-    };
-
-    html2pdf().set(opciones).from(elemento).save();
 }
 
 // --- MÓDULO ADMINISTRACIÓN ---
@@ -1156,6 +1114,55 @@ function renderizarLogReinicios() {
     });
 }
 
+// --- EXPORTACIÓN DE EXCEL ---
+function exportarExcelDetalle() {
+    const fin = viajes.filter(v => v.estado === 'FINALIZADO');
+    if (fin.length === 0) { alert("No hay datos para exportar."); return; }
+
+    const dataExcel = fin.map(v => {
+        const fe = obtenerFechaValida(v.fechaEntrada);
+        const fs = obtenerFechaValida(v.fechaSalida);
+        return {
+            "Viaje N°": v.id,
+            "Estado": v.estado,
+            "Fecha Entrada": fe ? formatearFechaCompleta(fe) : '',
+            "Fecha Salida": fs ? formatearFechaCompleta(fs) : '',
+            "Remito": v.remito,
+            "Productor": v.productor,
+            "Variedad": v.variedad,
+            "Tipo Producto": v.tipoProducto || 'TRADICIONAL',
+            "Nivel Calidad": v.nivelCalidad || '',
+            "Destino": v.destino || 'VINO',
+            "Finca": v.finca,
+            "Cuartel": v.cuartel,
+            "Año": v.anio,
+            "Color": v.color,
+            "Tipo Cosecha": v.cosecha,
+            "Estado Sanitario": v.estadoSanitario,
+            "Flete": v.flete,
+            "Tipo Camión": v.tipoCamion,
+            "Patente": v.patente,
+            "Chofer": v.chofer,
+            "Bruto (Kg)": v.bruto,
+            "Tara (Kg)": v.tara,
+            "Neto (Kg)": v.neto,
+            "OT": v.ot,
+            "AZ": v.az,
+            "Operador Ingreso": v.opIngreso,
+            "Operador Salida": v.opSalida,
+            "Lagar": v.lagarOperativo,
+            "Personas Lagar": v.cantPersonasLagar,
+            "Obs Ingreso": v.observacionesIngreso,
+            "Obs Salida": v.observacionesSalida
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(dataExcel);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Detalle_Viajes");
+    XLSX.writeFile(wb, `Ingresos_Uva_Detalle_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
 function exportarExcelRendimiento() {
     const fin = viajes.filter(v => v.estado === 'FINALIZADO');
     if (fin.length === 0) { alert("No hay datos para exportar."); return; }
@@ -1172,7 +1179,6 @@ function exportarExcelRendimiento() {
     let kgTerceros = 0;  // Terceros
 
     let resumenLagar = {};
-    let resumenPorDia = {}; // 👈 Acumulador de kilos ingresados por día
 
     fin.forEach(v => {
         const bruto = v.bruto || 0;
@@ -1183,7 +1189,7 @@ function exportarExcelRendimiento() {
         totalTara += tara;
         totalNeto += neto;
 
-        // Distribuir Propios vs Terceros
+        // Distribuir Propios vs Terceros (Ajusta 'SALENTEIN' según el valor real de tu sistema)
         const prodUpper = (v.productor || '').toUpperCase();
         if (prodUpper.includes('SALENTEIN') || prodUpper.includes('PROPIO')) {
             kgPropios += neto;
@@ -1192,21 +1198,10 @@ function exportarExcelRendimiento() {
         }
 
         // Totalizar por Lagar de descarga
-        const lagar = v.lagarOperativo || v.lagar || 'Sin Asignar';
+        const lagar = v.lagar || 'Sin Asignar';
         if (!resumenLagar[lagar]) resumenLagar[lagar] = { neto: 0, viajes: 0 };
         resumenLagar[lagar].neto += neto;
         resumenLagar[lagar].viajes += 1;
-
-        // Totalizar por Día (Extrae formato YYYY-MM-DD de la fecha)
-        let fechaStr = 'Sin Fecha';
-        const fechaObj = obtenerFechaValida(v.fechaEntrada || v.fechaIngreso || v.fecha);
-        if (fechaObj) {
-            fechaStr = fechaObj.toISOString().slice(0, 10);
-        }
-
-        if (!resumenPorDia[fechaStr]) resumenPorDia[fechaStr] = { neto: 0, viajes: 0 };
-        resumenPorDia[fechaStr].neto += neto;
-        resumenPorDia[fechaStr].viajes += 1;
     });
 
     // Armar matriz de datos para la hoja Placa Analítica
@@ -1224,16 +1219,8 @@ function exportarExcelRendimiento() {
         ["% Propios", totalNeto > 0 ? ((kgPropios / totalNeto) * 100).toFixed(2) + '%' : '0%'],
         ["% Terceros", totalNeto > 0 ? ((kgTerceros / totalNeto) * 100).toFixed(2) + '%' : '0%'],
         ["", ""],
-        ["📅 KG INGRESADOS POR DÍA (TOTALES)", "NETO TOTAL (KG)", "CANT. VIAJES"]
+        ["DESGLOSE POR LAGAR DE DESCARGA", "NETO (KG)", "CANT. VIAJES"]
     ];
-
-    // Ordenar fechas cronológicamente e insertarlas
-    const fechasOrdenadas = Object.keys(resumenPorDia).sort();
-    fechasOrdenadas.forEach(fecha => {
-        datosAnalitica.push([fecha, resumenPorDia[fecha].neto, resumenPorDia[fecha].viajes]);
-    });
-
-    datosAnalitica.push(["", ""], ["DESGLOSE POR LAGAR DE DESCARGA", "NETO (KG)", "CANT. VIAJES"]);
 
     // Agregar filas de lagares
     for (let lag in resumenLagar) {
@@ -1241,7 +1228,7 @@ function exportarExcelRendimiento() {
     }
 
     // ==========================================
-    // 2. CÁLCULO DE CUMPLIMIENTO POR PRODUCTOR Y VARIEDAD
+    // 2. CÁLCULO DE CUMPLIMIENTO (TU LÓGICA ORIGINAL)
     // ==========================================
     let resumenPV = {};
     fin.forEach(v => {
@@ -1286,6 +1273,6 @@ function exportarExcelRendimiento() {
     const wsRendimientos = XLSX.utils.json_to_sheet(dataExcel);
     XLSX.utils.book_append_sheet(wb, wsRendimientos, "Cumplimiento Entregas");
 
-    // Guardar archivo
+    // Guardar archivo con la fecha actual
     XLSX.writeFile(wb, `Rendimiento_y_Analitica_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
