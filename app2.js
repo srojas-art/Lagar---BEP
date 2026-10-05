@@ -747,8 +747,6 @@ function abrirTicketPreview(v) {
     document.getElementById('tk-productor').innerText = v.productor || '-';
     document.getElementById('tk-variedad').innerText = v.variedad || '-';
     if (document.getElementById('tk-tipo-producto')) document.getElementById('tk-tipo-producto').innerText = v.tipoProducto || 'TRADICIONAL';
-    document.getElementById('tk-calidad').innerText = v.nivelCalidad || '-';
-    document.getElementById('tk-destino').innerText = v.destino || 'VINO';
     document.getElementById('tk-finca').innerText = v.finca || '-';
     document.getElementById('tk-cuartel').innerText = v.cuartel || '-';
     document.getElementById('tk-anio').innerText = v.anio || '-';
@@ -763,9 +761,6 @@ function abrirTicketPreview(v) {
     document.getElementById('tk-bruto').innerText = v.bruto ? v.bruto.toLocaleString() : '0';
     document.getElementById('tk-tara').innerText = v.tara ? v.tara.toLocaleString() : '0';
     document.getElementById('tk-neto').innerText = v.neto ? v.neto.toLocaleString() : '0';
-
-    document.getElementById('tk-ot').innerText = v.ot || '-';
-    document.getElementById('tk-az').innerText = v.az || '-';
 
     let obsCombined = [];
     if (v.observacionesIngreso) obsCombined.push(`ING: ${v.observacionesIngreso}`);
