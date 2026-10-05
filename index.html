@@ -9,8 +9,9 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
 
-    <!-- Librería para Exportación a Excel -->
+   <!-- Librería para Exportación a Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -799,78 +800,91 @@
     <!-- MODAL TICKET PREVIEW -->
     <div id="modal-ticket-preview" class="modal hidden">
         <div class="ticket-modal-wrapper">
-            <div class="ticket-box">
-                <div class="ticket-header">
-                    <div style="font-weight: bold; font-size: 14px;">BODEGA PORTILLO</div>
-                    <div class="ticket-title">RECEPCIÓN DE MATERIA PRIMA</div>
-                    <div class="ticket-subtitle">COMPROBANTE DE PESAJE</div>
-                </div>
+ <div class="ticket-box" style="width: 7cm; padding: 10px; font-family: monospace; font-size: 11px; background: #fff; margin: auto;">
+    <div id="ticket-printable-area">
+        <div class="ticket-header" style="text-align: center;">
+            <div style="font-weight: bold; font-size: 14px;">BODEGA PORTILLO</div>
+            <div class="ticket-title" style="font-weight: bold;">RECEPCIÓN DE MATERIA PRIMA</div>
+            <div class="ticket-subtitle">COMPROBANTE DE PESAJE</div>
+            <!-- Indicador Original / Duplicado -->
+            <div id="tk-copia-tipo" style="font-weight: bold; font-size: 13px; margin-top: 4px; border: 1px solid #000; display: inline-block; padding: 2px 8px; text-transform: uppercase;">ORIGINAL</div>
+        </div>
 
-                <hr class="ticket-hr">
+        <hr class="ticket-hr">
 
-                <div class="ticket-row-single"><strong>N° VIAJE:</strong> <span id="tk-viaje"></span></div>
-                <div class="ticket-row-single"><strong>FECHA:</strong> <span id="tk-fecha"></span></div>
-                <div class="ticket-row-single"><strong>HORA ENTRADA:</strong> <span id="tk-hora-entrada"></span></div>
-                <div class="ticket-row-single"><strong>HORA SALIDA:</strong> <span id="tk-hora-salida"></span></div>
+        <div class="ticket-row-single"><strong>N° VIAJE:</strong> <span id="tk-viaje"></span></div>
+        <div class="ticket-row-single"><strong>FECHA:</strong> <span id="tk-fecha"></span></div>
+        <div class="ticket-row-single"><strong>HORA ENTRADA:</strong> <span id="tk-hora-entrada"></span></div>
+        <div class="ticket-row-single"><strong>HORA SALIDA:</strong> <span id="tk-hora-salida"></span></div>
 
-                <hr class="ticket-hr">
+        <hr class="ticket-hr">
 
-                <div class="ticket-row-single"><strong>OPERADOR INGRESO:</strong> <span id="tk-op-ingreso"></span></div>
-                <div class="ticket-row-single"><strong>OPERADOR SALIDA:</strong> <span id="tk-op-salida"></span></div>
-                <div class="ticket-row-single"><strong>REMITO:</strong> <span id="tk-remito"></span></div>
+        <div class="ticket-row-single"><strong>OPERADOR INGRESO:</strong> <span id="tk-op-ingreso"></span></div>
+        <div class="ticket-row-single"><strong>OPERADOR SALIDA:</strong> <span id="tk-op-salida"></span></div>
+        <div class="ticket-row-single"><strong>REMITO:</strong> <span id="tk-remito"></span></div>
 
-                <hr class="ticket-hr">
+        <hr class="ticket-hr">
 
-                <div class="ticket-row-single"><strong>PRODUCTOR:</strong> <span id="tk-productor"></span></div>
-                <div class="ticket-row-single"><strong>VARIEDAD:</strong> <span id="tk-variedad"></span></div>
-                <div class="ticket-row-single"><strong>TIPO PRODUCTO:</strong> <span id="tk-tipo-producto"></span></div>
-                <div class="ticket-row-single"><strong>FINCA:</strong> <span id="tk-finca"></span></div>
-                <div class="ticket-row-single"><strong>CUARTEL:</strong> <span id="tk-cuartel"></span></div>
-                <div class="ticket-row-single"><strong>AÑO:</strong> <span id="tk-anio"></span></div>
-                <div class="ticket-row-single"><strong>COLOR:</strong> <span id="tk-color"></span></div>
-                <div class="ticket-row-single"><strong>COSECHA:</strong> <span id="tk-cosecha"></span></div>
+        <div class="ticket-row-single"><strong>PRODUCTOR:</strong> <span id="tk-productor"></span></div>
+        <div class="ticket-row-single"><strong>VARIEDAD:</strong> <span id="tk-variedad"></span></div>
+        <div class="ticket-row-single"><strong>TIPO PRODUCTO:</strong> <span id="tk-tipo-producto"></span></div>
+        <div class="ticket-row-single"><strong>CALIDAD:</strong> <span id="tk-calidad"></span></div>
+        <div class="ticket-row-single"><strong>DESTINO:</strong> <span id="tk-destino"></span></div>
+        <div class="ticket-row-single"><strong>FINCA:</strong> <span id="tk-finca"></span></div>
+        <div class="ticket-row-single"><strong>CUARTEL:</strong> <span id="tk-cuartel"></span></div>
+        <div class="ticket-row-single"><strong>AÑO:</strong> <span id="tk-anio"></span></div>
+        <div class="ticket-row-single"><strong>COLOR:</strong> <span id="tk-color"></span></div>
+        <div class="ticket-row-single"><strong>COSECHA:</strong> <span id="tk-cosecha"></span></div>
 
-                <hr class="ticket-hr">
+        <hr class="ticket-hr">
 
-                <div class="ticket-row-single"><strong>FLETE:</strong> <span id="tk-flete"></span></div>
-                <div class="ticket-row-single"><strong>TIPO CAMIÓN:</strong> <span id="tk-tipo-camion"></span></div>
-                <div class="ticket-row-single"><strong>PATENTE:</strong> <span id="tk-patente"></span></div>
-                <div class="ticket-row-single"><strong>CHOFER:</strong> <span id="tk-chofer"></span></div>
+        <div class="ticket-row-single"><strong>FLETE:</strong> <span id="tk-flete"></span></div>
+        <div class="ticket-row-single"><strong>TIPO CAMIÓN:</strong> <span id="tk-tipo-camion"></span></div>
+        <div class="ticket-row-single"><strong>PATENTE:</strong> <span id="tk-patente"></span></div>
+        <div class="ticket-row-single"><strong>CHOFER:</strong> <span id="tk-chofer"></span></div>
 
-                <hr class="ticket-hr">
+        <hr class="ticket-hr">
 
-                <div class="ticket-row-single"><strong>PESO BRUTO:</strong> <span id="tk-bruto"></span> KG</div>
-                <div class="ticket-row-single"><strong>TARA:</strong> <span id="tk-tara"></span> KG</div>
-                <div class="ticket-row-single"><strong>PESO NETO:</strong> <span id="tk-neto"></span> KG</div>
-                
-                <hr class="ticket-hr">
+        <div class="ticket-row-single"><strong>PESO BRUTO:</strong> <span id="tk-bruto"></span> KG</div>
+        <div class="ticket-row-single"><strong>TARA:</strong> <span id="tk-tara"></span> KG</div>
+        <div class="ticket-row-single"><strong>PESO NETO:</strong> <span id="tk-neto"></span> KG</div>
+        
+        <hr class="ticket-hr">
 
-                <div class="ticket-row-single"><strong>OBSERVACIONES:</strong></div>
-                <div style="font-size: 11px; margin-top: 4px;" id="tk-observaciones"></div>
+        <div class="ticket-row-single"><strong>OT:</strong> <span id="tk-ot"></span></div>
+        <div class="ticket-row-single"><strong>AZ:</strong> <span id="tk-az"></span></div>
 
-                <hr class="ticket-hr">
+        <hr class="ticket-hr">
 
-                <div style="text-align: center; margin-top: 15px; font-size: 10px;">
-                    *** FIRMA Y CONFORMIDAD ***
-                </div>
+        <div class="ticket-row-single"><strong>OBSERVACIONES:</strong></div>
+        <div style="font-size: 11px; margin-top: 4px;" id="tk-observaciones"></div>
 
-                <div style="margin-top: 35px; display: flex; flex-direction: column; gap: 30px;">
-                    <div style="text-align: center;">
-                        <div style="border-top: 1px dashed #000; width: 80%; margin: 0 auto 5px auto;"></div>
-                        <div style="font-size: 10px; font-weight: bold;">FIRMA RESPONSABLE DE BODEGA</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="border-top: 1px dashed #000; width: 80%; margin: 0 auto 5px auto;"></div>
-                        <div style="font-size: 10px; font-weight: bold;">FIRMA CAMIONERO</div>
-                    </div>
-                </div>
+        <hr class="ticket-hr">
+
+        <div style="text-align: center; margin-top: 15px; font-size: 10px;">
+            *** FIRMA Y CONFORMIDAD ***
+        </div>
+
+        <div style="margin-top: 35px; display: flex; flex-direction: column; gap: 30px;">
+            <div style="text-align: center;">
+                <div style="border-top: 1px dashed #000; width: 80%; margin: 0 auto 5px auto;"></div>
+                <div style="font-size: 10px; font-weight: bold;">FIRMA RESPONSABLE DE BODEGA</div>
             </div>
-
-            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-                <button class="btn btn-secondary" onclick="cerrarModal('modal-ticket-preview')">CERRAR</button>
-                <button class="btn btn-primary" onclick="window.print()">IMPRIMIR TICKET</button>
+            <div style="text-align: center;">
+                <div style="border-top: 1px dashed #000; width: 80%; margin: 0 auto 5px auto;"></div>
+                <div style="font-size: 10px; font-weight: bold;">FIRMA CAMIONERO</div>
             </div>
         </div>
+    </div>
+
+    <!-- Botones de Acción dentro del Modal del Ticket -->
+    <div style="margin-top: 20px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;" class="no-print">
+        <button class="btn btn-primary btn-sm" onclick="imprimirTicketConTipo('ORIGINAL')">🖨️ Imprimir Original</button>
+        <button class="btn btn-secondary btn-sm" onclick="imprimirTicketConTipo('DUPLICADO')">🖨️ Imprimir Duplicado</button>
+        <button class="btn btn-success btn-sm" onclick="descargarTicketPDF()">📄 Descargar PDF</button>
+        <button class="btn btn-danger btn-sm" onclick="cerrarModal('modal-ticket-preview')">Cerrar</button>
+    </div>
+</div>
     </div>
 
     <!-- CONFIGURACIÓN Y SCRIPT DE CONFIGURACIÓN AUXILIAR -->
