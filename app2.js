@@ -739,7 +739,16 @@ function esProductorPropio(productor, finca) {
     return false;
 }
 
+// Variable global auxiliar para el viaje actualmente cargado en el ticket
+let viajeTicketActual = null;
+
 function abrirTicketPreview(v) {
+    viajeTicketActual = v;
+    
+    // Asignar el tipo por defecto a ORIGINAL
+    const elCopia = document.getElementById('tk-copia-tipo');
+    if (elCopia) elCopia.innerText = 'ORIGINAL';
+
     const feObj = obtenerFechaValida(v.fechaEntrada);
     const fsObj = obtenerFechaValida(v.fechaSalida);
 
@@ -755,6 +764,8 @@ function abrirTicketPreview(v) {
     document.getElementById('tk-productor').innerText = v.productor || '-';
     document.getElementById('tk-variedad').innerText = v.variedad || '-';
     if (document.getElementById('tk-tipo-producto')) document.getElementById('tk-tipo-producto').innerText = v.tipoProducto || 'TRADICIONAL';
+    document.getElementById('tk-calidad').innerText = v.nivelCalidad || '-';
+    document.getElementById('tk-destino').innerText = v.destino || 'VINO';
     document.getElementById('tk-finca').innerText = v.finca || '-';
     document.getElementById('tk-cuartel').innerText = v.cuartel || '-';
     document.getElementById('tk-anio').innerText = v.anio || '-';
@@ -770,6 +781,9 @@ function abrirTicketPreview(v) {
     document.getElementById('tk-tara').innerText = v.tara ? v.tara.toLocaleString() : '0';
     document.getElementById('tk-neto').innerText = v.neto ? v.neto.toLocaleString() : '0';
 
+    document.getElementById('tk-ot').innerText = v.ot || '-';
+    document.getElementById('tk-az').innerText = v.az || '-';
+
     let obsCombined = [];
     if (v.observacionesIngreso) obsCombined.push(`ING: ${v.observacionesIngreso}`);
     if (v.observacionesSalida) obsCombined.push(`SAL: ${v.observacionesSalida}`);
@@ -781,6 +795,31 @@ function abrirTicketPreview(v) {
 function imprimirTicketDirecto(id) {
     const v = viajes.find(item => item.id === id);
     if (v) abrirTicketPreview(v);
+}
+
+// Función para imprimir especificando "ORIGINAL" o "DUPLICADO"
+function imprimirTicketConTipo(tipo) {
+    const elCopia = document.getElementById('tk-copia-tipo');
+    if (elCopia) elCopia.innerText = tipo;
+    window.print();
+}
+
+// Función para descargar el Ticket como PDF con dimensiones fijas (7cm x 17cm)
+function descargarTicketPDF() {
+    const elemento = document.getElementById('ticket-printable-area');
+    if (!elemento) return;
+
+    const idViaje = document.getElementById('tk-viaje').innerText || '000000';
+
+    const opciones = {
+        margin:       [2, 2, 2, 2],
+        filename:     `Ticket_Viaje_${idViaje}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'cm', format: [7, 17], orientation: 'portrait' }
+    };
+
+    html2pdf().set(opciones).from(elemento).save();
 }
 
 // --- MÓDULO ADMINISTRACIÓN ---
