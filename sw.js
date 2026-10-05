@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lagarcontrol-v9';
+const CACHE_NAME = 'lagarcontrol-v8';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
