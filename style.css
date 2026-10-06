@@ -391,6 +391,6 @@ h2 { font-size: 1.3rem; color: var(--accent-blue); text-transform: uppercase; le
     body * { visibility: hidden; }
     #modal-ticket-preview, #modal-ticket-preview * { visibility: visible; }
     #modal-ticket-preview { position: absolute; left: 0; top: 0; width: 100%; background: #fff; }
-    .no-print { display: none !important; }
+    .no-print, .ticket-actions-bar, .btn-ticket-close, .btn-ticket-print { display: none !important; }
     .ticket-box { box-shadow: none; border: none; width: 100%; max-width: 320px; margin: 0 auto; }
 }
