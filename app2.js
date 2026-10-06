@@ -525,6 +525,8 @@ function ejecutarAbrirModalSalida(id) {
     document.getElementById('salida-input-ot').value = v.ot || '';
     document.getElementById('salida-input-az').value = v.az || '';
     document.getElementById('salida-input-obs').value = '';
+    document.getElementById('salida-input-lagar').value = v.lagarOperativo || '';
+document.getElementById('salida-input-personas').value = v.cantPersonasLagar || '';
 
     calcularNetoEnVivo();
 
