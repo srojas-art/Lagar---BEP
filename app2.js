@@ -545,11 +545,15 @@ async function confirmarSalidaViaje() {
     const id = document.getElementById('salida-id-viaje').value;
     const opSalida = document.getElementById('salida-input-op').value;
     const calidad = document.getElementById('salida-input-calidad').value;
+    const lagar = document.getElementById('salida-input-lagar').value;
+    const personas = parseInt(document.getElementById('salida-input-personas').value) || 0;
     const tara = parseFloat(document.getElementById('salida-input-tara').value);
     const ot = document.getElementById('salida-input-ot').value.trim();
     const az = document.getElementById('salida-input-az').value.trim();
 
     if (!opSalida) { alert("Seleccione el Operador de Salida."); return; }
+    if (!lagar) { alert("Seleccione el Lagar Operativo."); return; }
+    if (personas <= 0) { alert("Ingrese la cantidad de personas en el lagar."); return; }
     if (!calidad) { alert("Seleccione el Nivel de Calidad."); return; }
     if (isNaN(tara) || tara <= 0) { alert("Ingrese una Tara válida."); return; }
     if (!ot) { alert("Ingrese el valor de OT."); return; }
@@ -560,6 +564,8 @@ async function confirmarSalidaViaje() {
         viajes[idx].estado = 'FINALIZADO';
         viajes[idx].fechaSalida = new Date().toISOString();
         viajes[idx].opSalida = opSalida;
+        viajes[idx].lagarOperativo = lagar;
+        viajes[idx].cantPersonasLagar = personas;
         viajes[idx].nivelCalidad = calidad;
         viajes[idx].tara = tara;
         viajes[idx].neto = viajes[idx].bruto - tara;
