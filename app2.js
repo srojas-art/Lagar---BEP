@@ -698,13 +698,20 @@ function actualizarPlacaAnalitica(finalizados) {
     const elPV = document.getElementById('placa-productores-list');
     if (elPV) {
         let html = '';
-        for (let pv in porProdVar) {
+        
+        // Convertimos el objeto porProdVar en un array y lo ordenamos alfabéticamente por Productor y Variedad
+        const listaOrdenada = Object.keys(porProdVar).sort((a, b) => {
+            return a.localeCompare(b, 'es', { sensitivity: 'base' });
+        });
+
+        listaOrdenada.forEach(pv => {
             const [p, v] = pv.split(' - ');
             const plan = planificaciones.find(pl => pl.productor === p && pl.variedad === v);
             const kgPlan = plan ? plan.kgPactados : 0;
             const pct = kgPlan > 0 ? ((porProdVar[pv] / kgPlan) * 100).toFixed(1) + '%' : 'N/A';
             html += `<div><strong>${pv}:</strong> ${porProdVar[pv].toLocaleString()} Kg / Plan: ${kgPlan ? kgPlan.toLocaleString() : '0'} Kg (${pct})</div>`;
-        }
+        });
+
         elPV.innerHTML = html || 'Sin datos';
     }
 
