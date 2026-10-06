@@ -649,6 +649,15 @@ function actualizarPlacaAnalitica(finalizados) {
     let porLagar = {};
     let obsList = [];
 
+    // Estructuras de acumulación temporal (Día / Semana / Mes)
+    let porDiaUltimos7 = {};
+    let porSemanaMes = {};
+    let porMes = {};
+
+    const hoy = new Date();
+    const hace7Dias = new Date();
+    hace7Dias.setDate(hoy.getDate() - 7);
+
     finalizados.forEach(v => {
         const kg = v.neto || 0;
         totKg += kg;
@@ -676,6 +685,33 @@ function actualizarPlacaAnalitica(finalizados) {
         if (v.observacionesSalida && v.observacionesSalida !== 'SIN OBSERVACIONES') {
             obsList.push(`Viaje ${v.id} (Salida): ${v.observacionesSalida}`);
         }
+
+        // --- CÁLCULO Y AGRUPACIÓN TEMPORAL (Kg por Día, Semana y Mes) ---
+        const fechaStr = v.fechaSalida || v.fechaEntrada || v.fecha;
+        if (fechaStr) {
+            const fechaObj = typeof obtenerFechaValida === 'function' ? obtenerFechaValida(fechaStr) : new Date(fechaStr);
+            if (fechaObj && !isNaN(fechaObj.getTime())) {
+                // 1. Acumulado Mensual
+                const mesNombre = fechaObj.toLocaleString('es-AR', { month: 'long', year: 'numeric' }).toUpperCase();
+                porMes[mesNombre] = (porMes[mesNombre] || 0) + kg;
+
+                // 2. Acumulado Diario (últimos 7 días)
+                if (fechaObj >= hace7Dias) {
+                    const diaClave = fechaObj.toLocaleDateString('es-AR');
+                    porDiaUltimos7[diaClave] = (porDiaUltimos7[diaClave] || 0) + kg;
+                }
+
+                // 3. Acumulado Semanal del Mes
+                const diaDelMes = fechaObj.getDate();
+                let numSemana = "Semana 1 (Días 1-7)";
+                if (diaDelMes > 21) numSemana = "Semana 4+ (Días 22+)";
+                else if (diaDelMes > 14) numSemana = "Semana 3 (Días 15-21)";
+                else if (diaDelMes > 7) numSemana = "Semana 2 (Días 8-14)";
+
+                const claveSemana = `${mesNombre} - ${numSemana}`;
+                porSemanaMes[claveSemana] = (porSemanaMes[claveSemana] || 0) + kg;
+            }
+        }
     });
 
     const elTot = document.getElementById('placa-kilos-totales');
@@ -698,8 +734,6 @@ function actualizarPlacaAnalitica(finalizados) {
     const elPV = document.getElementById('placa-productores-list');
     if (elPV) {
         let html = '';
-        
-        // Convertimos el objeto porProdVar en un array y lo ordenamos alfabéticamente por Productor y Variedad
         const listaOrdenada = Object.keys(porProdVar).sort((a, b) => {
             return a.localeCompare(b, 'es', { sensitivity: 'base' });
         });
@@ -727,6 +761,42 @@ function actualizarPlacaAnalitica(finalizados) {
     const elObs = document.getElementById('placa-observaciones-list');
     if (elObs) {
         elObs.innerHTML = obsList.length > 0 ? obsList.map(o => `<div>• ${o}</div>`).join('') : 'Sin observaciones registradas';
+    }
+
+    // RENDERIZADO DEL NUEVO PANEL DE TIEMPOS (Día / Semana / Mes)
+    const elTiempos = document.getElementById('placa-tiempos-list');
+    if (elTiempos) {
+        let htmlTiempos = '<strong>📅 Últimos 7 Días:</strong><br>';
+        const diasKeys = Object.keys(porDiaUltimos7);
+        if (diasKeys.length > 0) {
+            diasKeys.forEach(d => {
+                htmlTiempos += `<div>• ${d}: <b>${porDiaUltimos7[d].toLocaleString()} Kg</b></div>`;
+            });
+        } else {
+            htmlTiempos += `<div style="color:var(--text-muted);">- Sin registros recientes -</div>`;
+        }
+
+        htmlTiempos += '<br><strong>📅 Acumulado por Semana:</strong><br>';
+        const semanasKeys = Object.keys(porSemanaMes);
+        if (semanasKeys.length > 0) {
+            semanasKeys.forEach(s => {
+                htmlTiempos += `<div>• ${s}: <b>${porSemanaMes[s].toLocaleString()} Kg</b></div>`;
+            });
+        } else {
+            htmlTiempos += `<div style="color:var(--text-muted);">- Sin registros semanales -</div>`;
+        }
+
+        htmlTiempos += '<br><strong>📅 Acumulado Mensual:</strong><br>';
+        const mesesKeys = Object.keys(porMes);
+        if (mesesKeys.length > 0) {
+            mesesKeys.forEach(m => {
+                htmlTiempos += `<div>• ${m}: <b>${porMes[m].toLocaleString()} Kg</b></div>`;
+            });
+        } else {
+            htmlTiempos += `<div style="color:var(--text-muted);">- Sin registros mensuales -</div>`;
+        }
+
+        elTiempos.innerHTML = htmlTiempos;
     }
 }
 
