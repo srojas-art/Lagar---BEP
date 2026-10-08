@@ -1356,3 +1356,42 @@ function exportarExcelRendimiento() {
     // Guardar archivo con la fecha actual
     XLSX.writeFile(wb, `Rendimiento_y_Analitica_${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
+// --- EXPORTACIÓN DE TICKET A PDF (5 cm x 15 cm) ---
+async function exportarTicketPDF() {
+    const elemento = document.getElementById('ticket-content-to-pdf');
+    if (!elemento) {
+        alert("No se encontró el contenedor del ticket.");
+        return;
+    }
+
+    const idViaje = document.getElementById('tk-viaje')?.innerText || '000000';
+
+    try {
+        // Capturar el ticket como imagen de alta resolución
+        const canvas = await html2canvas(elemento, {
+            scale: 3, // Mayor nitidez para texto pequeño
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+
+        // Crear documento PDF con dimensiones de 50mm x 150mm (5x15 cm)
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: [50, 150]
+        });
+
+        // Insertar la imagen cubriendo la medida exacta de 5x15 cm
+        pdf.addImage(imgData, 'PNG', 0, 0, 50, 150);
+
+        // Descargar archivo PDF
+        pdf.save(`Ticket_Viaje_${idViaje}.pdf`);
+    } catch (error) {
+        console.error("Error al exportar ticket a PDF:", error);
+        alert("Ocurrió un error al generar el archivo PDF.");
+    }
+}
