@@ -805,7 +805,7 @@
     <!-- MODAL TICKET PREVIEW -->
     <div id="modal-ticket-preview" class="modal hidden">
         <div class="ticket-modal-wrapper">
-            <div class="ticket-box">
+            <div class="ticket-box">id="ticket-content-to-pdf">
                 <div class="ticket-header">
                     <div style="font-weight: bold; font-size: 14px;">BODEGA PORTILLO</div>
                     <div class="ticket-title">RECEPCIÓN DE MATERIA PRIMA</div>
@@ -875,6 +875,7 @@
             <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
                 <button class="btn btn-secondary" onclick="cerrarModal('modal-ticket-preview')">CERRAR</button>
                 <button class="btn btn-primary" onclick="window.print()">IMPRIMIR TICKET</button>
+                <button class="btn btn-success" onclick="exportarTicketPDF()">📄 EXPORTAR PDF</button>
             </div>
         </div>
     </div>
