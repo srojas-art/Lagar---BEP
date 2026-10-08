@@ -387,39 +387,39 @@ h2 { font-size: 1.3rem; color: var(--accent-blue); text-transform: uppercase; le
     }
 }
 @media print {
-    body * { 
-        visibility: hidden; 
-    }
-    
-    /* 1. Hacemos visible el modal, PERO NO los elementos con clase no-print ni la barra de acciones */
-    #modal-ticket-preview, 
-    #modal-ticket-preview *:not(.no-print):not(.ticket-actions-bar):not(.btn-ticket-close):not(.btn-ticket-print):not(button) { 
-        visibility: visible; 
-    }
-    
-    #modal-ticket-preview { 
-        position: absolute; 
-        left: 0; 
-        top: 0; 
-        width: 100%; 
-        background: #fff; 
-    }
-    
-    /* 2. Removemos completamente el espacio ocupado por los botones */
-    .no-print, 
-    .ticket-actions-bar, 
-    .btn-ticket-close, 
-    .btn-ticket-print,
-    #modal-ticket-preview button { 
-        display: none !important; 
-        visibility: hidden !important; 
+    body * {
+        visibility: hidden;
     }
 
-    .ticket-box { 
-        box-shadow: none; 
-        border: none; 
-        width: 100%; 
-        max-width: 320px; 
-        margin: 0 auto; 
+    /* 1. Hacemos visible el modal, PERO NO los elementos con clase no-print ni la barra de acciones */
+    #modal-ticket-preview,
+    #modal-ticket-preview *:not(.no-print):not(.ticket-actions-bar):not(.btn-ticket-close):not(.btn-ticket-print):not(button) {
+        visibility: visible;
+    }
+
+    #modal-ticket-preview {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #fff;
+    }
+
+    /* 2. Removemos completamente el espacio ocupado por los botones */
+    .no-print,
+    .ticket-actions-bar,
+    .btn-ticket-close,
+    .btn-ticket-print,
+    #modal-ticket-preview button {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    .ticket-box {
+        box-shadow: none;
+        border: none;
+        width: 100%;
+        max-width: 320px;
+        margin: 0 auto;
     }
 }
